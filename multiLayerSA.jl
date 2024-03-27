@@ -456,15 +456,6 @@ function drawKeyboard(myGenome, id, currentLayoutMap)
         x, y, row, finger, home = currentLayoutMap[i]
 
         myColour = "gray69"
-        if letter in ["E"]
-            myColour = "cyan" 
-        elseif letter in ["T", "A", "O", "I", "N", "S", "R", "H", "L"]
-            myColour = "springgreen2" 
-        #elseif letter in ["D", "H", "L", "M", "U", "W", "Y"]
-        #    myColour = "darkgreen" 
-        elseif letter in ["[", "]", "~", "+", "7", "4", "6", "3", "8", "5"]
-            myColour = "tomato"
-        end
 
         if home == 1.0
             plot!([x], [y], shape=:rect, fillalpha=0.2, linecolor=nothing, color = myColour, label ="", markersize= 16.5 , dpi = 100)
