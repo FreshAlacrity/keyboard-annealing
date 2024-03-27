@@ -1,4 +1,25 @@
-# keyboards
+# Keyboard Annealing
+Run by opening the repo folder in a terminal with this command (works just fine in VSCode Integrated Terminal):
+julia -L 'keyboardSA.jl'
+julia -L 'multiLayerSA.jl'
+
+## Changes
+- added `using Revise`
+
+### To Do
+- update layout to reflect the Moonlander
+- update strength scores (fingerCPM and rowCPM)
+- consider how to implement layers
+- see if there's a not-terrible way to import and evaluate layouts from Oryx
+- consider how to adapt for left-only input
+  - just adding vertical rows would penalize for distance weirdly
+- delete all but final PNG when run starts
+  - rename previous final to previous_final and keep it?
+- separate numbers and symbols?
+- alter to work with a word-frequency dict instead of a giant file?
+
+
+# Source Readme:
 
 Supporting simulated annealing code for the [Why I Made The World's Worst Keyboard](https://youtu.be/188fipF-i5I) YouTube video.
 

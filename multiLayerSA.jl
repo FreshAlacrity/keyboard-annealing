@@ -1,4 +1,16 @@
 # ### SETUP ###
+
+# Run: julia -L 'multiLayerSA.jl'
+
+# ~~~ todo ~~~
+# Get layout export working for multiple layers (maybe just not as an image?)
+# Get evaluation working for multiple layers
+# Separate the shifted versions of keys from the regular versions
+# Include the space/shift key as a layer control
+# Get it working so we can have two index columns instead of a pinky column
+# Get it working so the number of keys + dict of chars can mismatch in length
+# Remove references to second hand
+
 # ~~~ libraries ~~~
 import Pkg
 Pkg.activate(@__DIR__)
@@ -9,7 +21,6 @@ using Base.Threads
 using BenchmarkTools
 using Statistics
 using Revise
-
 
 # ~~~ rng ~~~
 seed = 123456
@@ -313,202 +324,25 @@ traditionalLayoutMap = Dict{Int, Tuple{Float64, Float64, Int, Int, Int}}(
 )
 
 
-# comparisons
-QWERTYgenome = [
-    '~',
-    '1',
-    '2',
-    '3',
-    '4',
-    '5',
-    '6',
-    '7',
-    '8',
-    '9',
-    '0',
-    '-',
-    '+',
-    'Q',
-    'W',
-    'E',
-    'R',
-    'T',
-    'Y',
-    'U',
-    'I',
-    'O',
-    'P',
-    '[',
-    ']',
-    'A',
-    'S',
-    'D',
-    'F',
-    'G',
-    'H',
-    'J',
-    'K',
-    'L',
-    ';',
-    ''',
-    'Z',  
-    'X',  
-    'C',  
-    'V',  
-    'B',  
-    'N',  
-    'M',  
-    '<',
-    '>',
-    '?'
-]
-
-ABCgenome = [
-    '~',
-    '1',
-    '2',
-    '3',
-    '4',
-    '5',
-    '6',
-    '7',
-    '8',
-    '9',
-    '0',
-    '-',
-    '+',
-    'A',
-    'B',
-    'C',
-    'D',
-    'E',
-    'F',
-    'G',
-    'H',
-    'I',
-    'J',
-    '[',
-    ']',
-    'K',
-    'L',
-    'M',
-    'N',
-    'O',
-    'P',
-    'Q',
-    'R',
-    'S',
-    ';',
-    ''',
-    'T',
-    'U',
-    'V',
-    'W',
-    'X',
-    'Y',
-    'Z',
-    '<',
-    '>',
-    '?'
-]
-
-DVORAKgenome = [
-    '~',
-    '1',
-    '2',
-    '3',
-    '4',
-    '5',
-    '6',
-    '7',
-    '8',
-    '9',
-    '0',
-    '[',
-    ']',
-    ''',
-    '<',
-    '>',
-    'P',
-    'Y',
-    'F',
-    'G',
-    'C',
-    'R',
-    'L',
-    '?',
-    '+',
-    'A',
-    'O',
-    'E',
-    'U',
-    'I',
-    'D',
-    'H',
-    'T',
-    'N',
-    'S',
-    '-',
-    ';',
-    'Q',
-    'J',
-    'K',
-    'X',
-    'B',
-    'M',
-    'W',
-    'V',
-    'Z'
-]
-
-COMMONALITYgenome = [
-    'E',
-    'T',
-    'O',
-    'A',
-    'I',
-    'N',
-    'S',
-    'R',
-    'H',
-    'L',
-    'D',
-    'U',
-    'C',
-    'M',
-    'G',
-    'Y',
-    'P',
-    'F',
-    'W',
-    'B',
-    'K',
-    'V',
-    ''',
-    '<',
-    '?',
-    '+',
-    '-',
-    ';',
-    'Q',
-    'J',
-    'X',
-    'Z',
-    '~',
-    '0',
-    '1',
-    '2',
-    '3',
-    '4',
-    '5',
-    '6',
-    '7',
-    '8',
-    '9',
-    '[',
-    ']',
-    '>',
-]
+function countCharacters()
+    char_count = Dict{Char, Int}()
+    
+    # Open the file for reading
+    io = open(bookPath, "r")
+    
+    # Read each line from the file
+    for line in eachline(io)
+        for char in line
+            char = uppercase(char)
+            char_count[char] = get(char_count, char, 0) + 1
+        end
+    end
+    
+    # Close the file
+    close(io)
+    
+    return char_count
+end
 
 # alphabet
 const letterList = [
@@ -607,28 +441,19 @@ const keyMapDict = Dict(
     ''' => [43,0], '"' => [43,1],
     ',' => [44,0], '<' => [44,1],
     '.' => [45,0], '>' => [45,1],
-    '/' => [46,0], '?' => [46,1]
+    '/' => [46,0], '?' => [46,1],
 )
 
 const handList = [1, 1, 1, 1, 2, 2, 2, 2] # what finger is with which hand
 
 # ### KEYBOARD FUNCTIONS ###
-function createGenome()
-    # setup
-    myGenome = shuffle(rng, letterList)
-
-    # return
-    return myGenome
-end
 
 function drawKeyboard(myGenome, id, currentLayoutMap)
     plot()
-    namedColours = ["yellow", "blue", "green", "orange", "pink", "green", "blue", "yellow"]
-
+    
     for i in 1:46
         letter = myGenome[i]
         x, y, row, finger, home = currentLayoutMap[i]
-        # myColour = namedColours[finger]
 
         myColour = "gray69"
         if letter in ["E"]
@@ -655,25 +480,6 @@ function drawKeyboard(myGenome, id, currentLayoutMap)
 
 end
 
-function countCharacters()
-    char_count = Dict{Char, Int}()
-    
-    # Open the file for reading
-    io = open(bookPath, "r")
-    
-    # Read each line from the file
-    for line in eachline(io)
-        for char in line
-            char = uppercase(char)
-            char_count[char] = get(char_count, char, 0) + 1
-        end
-    end
-    
-    # Close the file
-    close(io)
-    
-    return char_count
-end
 
 # ### SAVE SCORE ###
 function appendUpdates(updateLine)
@@ -759,45 +565,7 @@ function doKeypress(myFingerList, myGenome, keyPress, oldFinger, oldHand, curren
     return myFingerList, oldFinger, oldHand
 end
 
-function objectiveFunction(file, myGenome, currentLayoutMap)
-    # setup
-    objective = 0
-   
-    # ~ create hand ~
-    myFingerList = zeros(8, 6) # (homeX, homeY, currentX, currentY, distanceCounter, objectiveCounter)
-
-    for i in 1:46
-        x, y, _, finger, home = currentLayoutMap[i]
-
-        if home == 1.0
-            myFingerList[finger, 1:4] = [x, y, x, y]
-        end
-    end
-    
-    # load text
-    oldFinger = 0
-    oldHand = 0
-
-    for currentCharacter in file
-        # determine keypress
-        keyPress = determineKeypress(currentCharacter)
-
-        # do keypress
-        if keyPress !== nothing
-            myFingerList, oldFinger, oldHand = doKeypress(myFingerList, myGenome, keyPress, oldFinger, oldHand,
-                                                          currentLayoutMap)
-        end
-    end
-
-    # calculate objective
-    objective = sum(myFingerList[:, 6])
-    objective = (objective / QWERTYscore - 1) * 100
-
-    # return
-    return objective
-end
-
-function baselineObjectiveFunction(file, myGenome, currentLayoutMap) # same as previous but for getting QWERTY baseline
+function baselineObjectiveFunction(file, myGenome, currentLayoutMap)
     # setup
     objective = 0
    
@@ -834,6 +602,15 @@ function baselineObjectiveFunction(file, myGenome, currentLayoutMap) # same as p
     return objective
 end
 
+function objectiveFunction(file, myGenome, currentLayoutMap)
+    # calculate objective
+    objective = baselineObjectiveFunction(file, myGenome, currentLayoutMap)
+    objective = (objective / QWERTYscore - 1) * 100
+
+    # return
+    return objective
+end
+
 # ### SA OPTIMISER ###
 function shuffleGenome(currentGenome, temperature)
     # setup
@@ -857,15 +634,14 @@ function shuffleGenome(currentGenome, temperature)
 
 end
 
-
 function runSA(
     # set layout here:
     layoutMap = moonlanderLayoutMap2;
-    baselineLayout = COMMONALITYgenome,
+    baselineLayout = letterList,
     temperature = 500,
     epoch = 20,
     coolingRate = 0.99,
-    num_iterations = 25000,
+    num_iterations = 10, #25000,
     save_current_best = :plot,
     verbose = true,
 )
@@ -884,7 +660,7 @@ function runSA(
 
 
     # setup
-    currentGenome = createGenome()
+    currentGenome = shuffle(rng, letterList)
     currentObjective = objectiveFunction(file, currentGenome, currentLayoutMap)
 
     bestGenome = currentGenome
@@ -966,7 +742,14 @@ function runSA(
 
 end
 
+# Testing
+function listCharacters()
+    foo = keys(countCharacters())
+    println("Dict:", foo)
+    return []
+end
 
 # ### RUN ###
 Random.seed!(rng, seed)
 @time runSA()
+
